@@ -1,10 +1,11 @@
 package marcdejonge.advent2022
 
+import marcdejonge.advent2022.util.toInt
+
 fun main() = Day4.printSolution()
 
 object Day4 : DaySolver(4) {
     private val regex = Regex("(\\d+)-(\\d+),(\\d+)-(\\d+)")
-    private fun MatchGroup?.toInt() = checkNotNull(this).value.toInt()
 
     private val assignmentPair: List<Pair<IntRange, IntRange>> = input.map { line ->
         regex.matchEntire(line)?.groups.let { group ->
@@ -19,10 +20,13 @@ object Day4 : DaySolver(4) {
     }
 
     override fun calcPart2() = assignmentPair.count { (firstRange, secondRange) ->
-        firstRange.overlaps(secondRange)
+        firstRange.overlapsWith(secondRange)
     }
 
-    private fun IntRange.contains(range: IntRange) = first <= range.first && last >= range.last
-    private fun IntRange.overlaps(range: IntRange) =
-        contains(range.first) || contains(range.last) || range.contains(first) || range.contains(last)
+    private fun IntRange.contains(other: IntRange) =
+        this.first <= other.first && this.last >= other.last
+
+    private fun IntRange.overlapsWith(other: IntRange) =
+        this.contains(other.first) || this.contains(other.last)
+                || other.contains(this.first) || other.contains(this.last)
 }
