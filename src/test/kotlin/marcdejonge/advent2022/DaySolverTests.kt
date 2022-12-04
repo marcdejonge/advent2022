@@ -13,6 +13,7 @@ class DaySolverTests {
         override fun provideArguments(context: ExtensionContext): Stream<Arguments> = Stream.of(
             Arguments.of(Day1, 24000, 45000),
             Arguments.of(Day2, 15, 12),
+            Arguments.of(Day3, 157, 70),
         )
     }
 
