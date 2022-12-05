@@ -4,11 +4,11 @@ import marcdejonge.advent2022.util.toInt
 
 fun main() = Day5.printSolution()
 
-object Day5 : DaySolver(5) {
+object Day5 : DaySolver(5, "_big_88") {
     private fun parseStacks(lines: List<String>) = with(lines.reversed()) {// Reverse the order to build stacks
         List(first().trim().split(" ").last().toInt()) { ix -> // Create the number of stacks based on the number line
             val charIx = ix * 4 + 1 // Each character for this stack is on this index for each line
-            ArrayList(mapNotNull { it.getOrNull(charIx) }.filter { it in 'A'..'Z' }) // Only use the valid characters
+            mapNotNull { it.getOrNull(charIx) }.filter { it in 'A'..'Z' } // Only use the valid characters
         }
     }
 
@@ -26,7 +26,7 @@ object Day5 : DaySolver(5) {
     }
 
     private val stacks = parseStacks(input.takeWhile { it != "" })
-    private val commands = input.takeLastWhile { it != "" }.map(::parseCommand).reversed()
+    private val commands = input.reversed().takeWhile { it != "" }.map(::parseCommand)
 
     private fun calculate(reversed: Boolean) = List(stacks.size) { stackIx ->
         commands.fold(Position(stackIx, 0)) { pos, command -> pos.traceBackCommand(command, reversed) }

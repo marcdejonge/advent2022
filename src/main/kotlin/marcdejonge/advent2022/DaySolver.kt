@@ -2,14 +2,14 @@ package marcdejonge.advent2022
 
 import kotlin.system.measureNanoTime
 
-abstract class DaySolver(val day: Int) {
+abstract class DaySolver(private val day: Int, private val bigVersion: String = "") {
     private val url by lazy {
-        val fileName = String.format("day%02d.txt", day)
+        val fileName = String.format("day%02d%s.txt", day, bigVersion)
         this::class.java.classLoader.getResource(fileName) ?: error("Could not load file $fileName")
     }
 
     val rawInput: String
-        get() = url.openStream().bufferedReader().readText().trim()
+        get() = url.openStream().bufferedReader().readText().trimEnd()
 
     val input: List<String>
         get() = rawInput.lines()
