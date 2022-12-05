@@ -9,7 +9,7 @@ abstract class DaySolver(val day: Int) {
     }
 
     val rawInput: String
-        get() = url.openStream().bufferedReader().readText()
+        get() = url.openStream().bufferedReader().readText().trim()
 
     val input: List<String>
         get() = rawInput.lines()
