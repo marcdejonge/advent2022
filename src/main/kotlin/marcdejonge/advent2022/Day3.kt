@@ -1,8 +1,8 @@
 package marcdejonge.advent2022
 
-fun main() = Day3.printSolution()
+fun main() = DaySolver.printSolutions { Day3() }
 
-object Day3 : DaySolver(3) {
+class Day3 : DaySolver(3) {
     private val rucksacks = input.map(::Rucksack).asSequence()
 
     override fun calcPart1() = rucksacks.sumOf {

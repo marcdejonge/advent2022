@@ -1,8 +1,8 @@
 package marcdejonge.advent2022
 
-fun main() = Day2.printSolution()
+fun main() = DaySolver.printSolutions { Day2() }
 
-object Day2 : DaySolver(2) {
+class Day2 : DaySolver(2) {
     private val games = input.map {
         parseChoice(it[0]) to it[2]
     }

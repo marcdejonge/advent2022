@@ -1,6 +1,14 @@
 package marcdejonge.advent2022
 
-import kotlin.system.measureNanoTime
+fun main() {
+    val day = System.getenv("DAY")?.toIntOrNull() ?: return
+
+    try {
+        Class.forName("marcdejonge.advent2022.Day${day}Kt").getMethod("main").invoke(null)
+    } catch (ex: ClassNotFoundException) {
+        println("Day not found")
+    }
+}
 
 abstract class DaySolver(private val day: Int, private val bigVersion: String = "") {
     private val url by lazy {
@@ -21,14 +29,26 @@ abstract class DaySolver(private val day: Int, private val bigVersion: String = 
 
     open fun calcPart2(): Any? = null
 
-    fun printSolution() {
-        println("$this:")
-        val seconds = measureNanoTime {
-            println("    Part 1: ${solutionPart1 ?: "no solution found"}")
-            println("    Part 2: ${solutionPart2 ?: "no solution found"}")
-        } / 1e9
-        println(String.format("Calculated in %1.3f seconds", seconds))
-    }
-
     override fun toString() = "Day $day"
+
+    companion object {
+        fun printSolutions(solverFactory: () -> DaySolver) {
+            val solver = printTiming("Loaded") {
+                solverFactory()
+            }
+            println("$solver:")
+            printTiming("Calculated") {
+                println("    Part 1: ${solver.solutionPart1 ?: "no solution found"}")
+                println("    Part 2: ${solver.solutionPart2 ?: "no solution found"}")
+            }
+        }
+
+        private fun <T> printTiming(what: String, function: () -> T): T {
+            val start = System.nanoTime()
+            val result = function()
+            val totalTime = (System.nanoTime() - start) / 1e9
+            println(String.format("%s in %1.3f seconds", what, totalTime))
+            return result
+        }
+    }
 }

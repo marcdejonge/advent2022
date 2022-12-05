@@ -1,8 +1,8 @@
 package marcdejonge.advent2022
 
-fun main() = Day1.printSolution()
+fun main() = DaySolver.printSolutions { Day1() }
 
-object Day1 : DaySolver(1) {
+class Day1 : DaySolver(1) {
     private val sums by lazy {
         rawInput.splitToSequence("\n\n")
             .map { elf ->

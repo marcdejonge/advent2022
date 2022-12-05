@@ -22,4 +22,17 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+    register<Exec>("day") {
+        dependsOn("build")
+        group = "Execution"
+        environment["DAY"] = if(project.hasProperty("day")) project.property("day") else "1"
+        environment["BIG_POSTFIX"] = if (project.hasProperty("big_postfix")) project.property("big_postfix") else ""
+        commandLine(
+            "java",
+            "-classpath",
+            sourceSets.main.get().runtimeClasspath.asPath,
+            "marcdejonge.advent2022.DaySolverKt"
+        )
+    }
 }

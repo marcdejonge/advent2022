@@ -2,9 +2,9 @@ package marcdejonge.advent2022
 
 import marcdejonge.advent2022.util.toInt
 
-fun main() = Day4.printSolution()
+fun main() = DaySolver.printSolutions { Day4() }
 
-object Day4 : DaySolver(4) {
+class Day4 : DaySolver(4) {
     private val regex = Regex("(\\d+)-(\\d+),(\\d+)-(\\d+)")
 
     private val assignmentPair: List<Pair<IntRange, IntRange>> = input.map { line ->

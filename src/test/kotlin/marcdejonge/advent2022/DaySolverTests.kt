@@ -11,11 +11,11 @@ import kotlin.test.assertEquals
 class DaySolverTests {
     class ExpectedResults : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext): Stream<Arguments> = Stream.of(
-            Arguments.of(Day1, 24000, 45000),
-            Arguments.of(Day2, 15, 12),
-            Arguments.of(Day3, 157, 70),
-            Arguments.of(Day4, 2, 4),
-            Arguments.of(Day5, "CMZ", "MCD"),
+            Arguments.of(Day1(), 24000, 45000),
+            Arguments.of(Day2(), 15, 12),
+            Arguments.of(Day3(), 157, 70),
+            Arguments.of(Day4(), 2, 4),
+            Arguments.of(Day5(), "CMZ", "MCD"),
         )
     }
 
