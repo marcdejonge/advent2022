@@ -24,7 +24,7 @@ tasks {
     }
 
     register<Exec>("day") {
-        dependsOn("compileKotlin")
+        dependsOn("compileKotlin", "processResources")
         group = "Execution"
 
         if (project.hasProperty("day") && project.property("day").toString().toIntOrNull() != null) environment["DAY"] =
