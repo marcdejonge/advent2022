@@ -10,9 +10,10 @@ fun main() {
     }
 }
 
-abstract class DaySolver(private val day: Int, private val bigVersion: String = "") {
+abstract class DaySolver(private val day: Int) {
     private val url by lazy {
-        val fileName = String.format("day%02d%s.txt", day, bigVersion)
+        val filePostfix = System.getenv("FILE_POSTFIX") ?: ""
+        val fileName = String.format("day%02d%s.txt", day, filePostfix)
         this::class.java.classLoader.getResource(fileName) ?: error("Could not load file $fileName")
     }
 

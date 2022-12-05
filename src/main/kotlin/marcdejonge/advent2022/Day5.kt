@@ -2,9 +2,9 @@ package marcdejonge.advent2022
 
 import marcdejonge.advent2022.util.toInt
 
-fun main() = DaySolver.printSolutions { Day5(System.getenv("BIG_POSTFIX") ?: "") }
+fun main() = DaySolver.printSolutions { Day5() }
 
-class Day5(bigVersion: String = "") : DaySolver(5, bigVersion) {
+class Day5 : DaySolver(5) {
     private fun parseStacks(lines: List<String>) = with(lines.reversed()) {// Reverse the order to build stacks
         List(first().trim().split(" ").last().toInt()) { ix -> // Create the number of stacks based on the number line
             val charIx = ix * 4 + 1 // Each character for this stack is on this index for each line

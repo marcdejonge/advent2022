@@ -24,10 +24,17 @@ tasks {
     }
 
     register<Exec>("day") {
-        dependsOn("build")
+        dependsOn("compileKotlin")
         group = "Execution"
-        environment["DAY"] = if(project.hasProperty("day")) project.property("day") else "1"
-        environment["BIG_POSTFIX"] = if (project.hasProperty("big_postfix")) project.property("big_postfix") else ""
+
+        if (project.hasProperty("day") && project.property("day").toString().toIntOrNull() != null) environment["DAY"] =
+            project.property("day")
+        else
+            throw GradleException("Missing property day, please add the -Pday=X parameter")
+
+        if (project.hasProperty("file_postfix"))
+            environment["FILE_POSTFIX"] = project.property("file_postfix")
+
         commandLine(
             "java",
             "-classpath",
