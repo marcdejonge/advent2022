@@ -6,7 +6,7 @@ fun main() = Day5.printSolution()
 
 object Day5 : DaySolver(5) {
     private fun parseStacks(lines: List<String>) = with(lines.reversed()) {// Reverse the order to build stacks
-        List(first().split(" ").last().toInt()) { ix -> // Create the number of stacks based on the number line
+        List(first().trim().split(" ").last().toInt()) { ix -> // Create the number of stacks based on the number line
             val charIx = ix * 4 + 1 // Each character for this stack is on this index for each line
             ArrayList(mapNotNull { it.getOrNull(charIx) }.filter { it in 'A'..'Z' }) // Only use the valid characters
         }
@@ -26,28 +26,21 @@ object Day5 : DaySolver(5) {
     }
 
     private val stacks = parseStacks(input.takeWhile { it != "" })
-    private val commands = input.takeLastWhile { it != "" }.map(::parseCommand)
+    private val commands = input.takeLastWhile { it != "" }.map(::parseCommand).reversed()
 
-    init {
-        println(stacks)
-        println(commands)
-    }
+    private fun calculate(reversed: Boolean) = List(stacks.size) { stackIx ->
+        commands.fold(Position(stackIx, 0)) { pos, command -> pos.traceBackCommand(command, reversed) }
+    }.map { pos -> stacks[pos.stackIx].let { stack -> stack[stack.lastIndex - pos.charIx] } }.joinToString("")
 
-    private fun calc(execute: Command.(List<ArrayList<Char>>) -> Unit) =
-        stacks.map { ArrayList(it) } // Make sure to make a copy before allowing changes
-            .also { stacks -> commands.forEach { command -> execute(command, stacks) } } // Apply commands
-            .map { it.last() }.joinToString(separator = "") // Map to characters back to a String
+    override fun calcPart1() = calculate(true)
+    override fun calcPart2() = calculate(false)
 
-    override fun calcPart1() = calc { stacks ->
-        repeat(count) { _ ->
-            stacks[toStackIx].add(stacks[fromStackIx].removeLast())
-        }
-    }
-
-    override fun calcPart2() = calc { stacks ->
-        val insertIx = stacks[toStackIx].size
-        repeat(count) { _ ->
-            stacks[toStackIx].add(insertIx, stacks[fromStackIx].removeLast())
+    data class Position(val stackIx: Int, val charIx: Int) {
+        fun traceBackCommand(command: Command, reversed: Boolean) = when {
+            command.fromStackIx == stackIx -> copy(charIx = charIx + command.count)
+            command.toStackIx != stackIx -> this
+            charIx >= command.count -> copy(charIx = charIx - command.count)
+            else -> Position(command.fromStackIx, if (reversed) command.count - (charIx + 1) else charIx)
         }
     }
 }
