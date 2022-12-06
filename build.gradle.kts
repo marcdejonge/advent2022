@@ -27,8 +27,8 @@ tasks {
         dependsOn("compileKotlin", "processResources")
         group = "Execution"
 
-        if (project.hasProperty("day") && project.property("day").toString().toIntOrNull() != null) environment["DAY"] =
-            project.property("day")
+        if (project.hasProperty("day") && project.property("day").toString().toIntOrNull() != null)
+            environment["DAY"] = project.property("day")
         else
             throw GradleException("Missing property day, please add the -Pday=X parameter")
 
