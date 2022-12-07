@@ -8,7 +8,7 @@ class Day7 : DaySolver(7) {
         val parent: Directory?
         val size: Int
 
-        fun addToParent() = parent?.items?.set(name, this)
+        fun addToParent() = parent?.also { it.items[name] = this } ?: error("Missing parent")
     }
 
     data class Directory(
@@ -21,39 +21,30 @@ class Day7 : DaySolver(7) {
             .filterIsInstance<Directory>().flatMap { it.listDirs() }
     }
 
-    data class File(
-        override val name: String,
-        override val parent: Directory,
-        override val size: Int
-    ) : FSItem
+    data class File(override val name: String, override val parent: Directory, override val size: Int) : FSItem
 
     private val topDirectory = Directory(name = "/")
 
     init {
         input.fold(topDirectory) { current, line ->
-            if (line.startsWith("$ cd ")) {
-                when (val name = line.drop(5)) {
-                    "/" -> topDirectory
-                    ".." -> current.parent ?: topDirectory
-                    else -> current.items[name] as? Directory ?: error("Unknown directory $name")
-                }
-            } else {
-                if (line.startsWith("$")) {
-                    // Ignore other commands
-                } else if (line.startsWith("dir ")) {
-                    Directory(line.drop(4), current).addToParent()
-                } else {
-                    val (size, name) = line.split(" ")
-                    File(name, current, size.toInt()).addToParent()
-                }
-                current
+            val (type, name) = line.split(" ", limit = 2)
+            when (type) {
+                "$" -> if (name == "cd") {
+                    when (val dirName = line.drop(5)) {
+                        "/" -> topDirectory
+                        ".." -> current.parent ?: error("Already at the top directory")
+                        else -> current.items[dirName] as? Directory ?: error("Unknown directory $dirName")
+                    }
+                } else current // Ignore any other commands
+                "dir" -> Directory(line.drop(4), current).addToParent()
+                else -> File(name, current, type.toInt()).addToParent() // The type is actually the size
             }
         }
     }
 
-    override fun calcPart1() = topDirectory.listDirs().filter { it.size <= 100000 }.sumOf { it.size }
-    override fun calcPart2(): Int {
-        val spaceNeeded = 30_000_000 - (70_000_000 - topDirectory.size)
-        return topDirectory.listDirs().filter { it.size >= spaceNeeded }.minOf { it.size }
-    }
+    override fun calcPart1() =
+        topDirectory.listDirs().filter { it.size <= 100000 }.sumOf { it.size }
+
+    override fun calcPart2() =
+        topDirectory.listDirs().filter { it.size >= topDirectory.size - 40_000_000 }.minOf { it.size }
 }
