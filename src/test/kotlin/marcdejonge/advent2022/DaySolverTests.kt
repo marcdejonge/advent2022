@@ -17,6 +17,7 @@ class DaySolverTests {
             Arguments.of(Day4(), 2, 4),
             Arguments.of(Day5(), "CMZ", "MCD"),
             Arguments.of(Day6(), 11, 26),
+            Arguments.of(Day7(), 95437, 24933642),
         )
     }
 
