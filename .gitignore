@@ -178,4 +178,4 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/gradle,macos,intellij+all,kotlin
 
 # Ignore any big input data files, I don't want to take up space on git
-**/resources/*_big*.txt
+**/resources/day*_*.txt
