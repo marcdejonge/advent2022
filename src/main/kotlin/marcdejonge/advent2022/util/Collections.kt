@@ -1,9 +1,14 @@
 package marcdejonge.advent2022.util
 
-fun <T> List<T>.chunkBy(predicate: (T) -> Boolean): List<List<T>> =
-    fold(mutableListOf(mutableListOf<T>())) { acc, item ->
-        acc.apply {
-            if (predicate(item)) add(mutableListOf())
-            else last().add(item)
+fun <T> Sequence<T>.chunkBy(predicate: (T) -> Boolean): Sequence<List<T>> {
+    val it = iterator()
+    return generateSequence {
+        val list = mutableListOf<T>()
+        while (it.hasNext()) {
+            val next = it.next()
+            if (predicate(next)) break
+            list.add(next)
         }
+        if (list.isEmpty() && !it.hasNext()) null else list
     }
+}

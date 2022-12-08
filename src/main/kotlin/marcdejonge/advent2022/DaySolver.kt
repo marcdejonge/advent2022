@@ -17,11 +17,11 @@ abstract class DaySolver(private val day: Int) {
         this::class.java.classLoader.getResource(fileName) ?: error("Could not load file $fileName")
     }
 
-    val rawInput: String
-        get() = url.openStream().bufferedReader().readText().trimEnd()
+    val inputFullText: String
+        get() = url.openStream().bufferedReader().readText()
 
-    val input: List<String>
-        get() = rawInput.lines()
+    val input: Sequence<String>
+        get() = url.openStream().bufferedReader().lineSequence()
 
     val solutionPart1 by lazy { calcPart1() }
     val solutionPart2 by lazy { calcPart2() }

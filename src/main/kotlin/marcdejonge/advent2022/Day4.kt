@@ -1,18 +1,14 @@
 package marcdejonge.advent2022
 
-import marcdejonge.advent2022.util.toInt
-
 fun main() = DaySolver.printSolutions { Day4() }
 
 class Day4 : DaySolver(4) {
     private val regex = Regex("(\\d+)-(\\d+),(\\d+)-(\\d+)")
 
-    private val assignmentPair: List<Pair<IntRange, IntRange>> = input.map { line ->
-        regex.matchEntire(line)?.groups.let { group ->
-            checkNotNull(group)
-            group[1].toInt()..group[2].toInt() to group[3].toInt()..group[4].toInt()
-        }
-    }
+    private val assignmentPair = input.map { line ->
+        val (a, b, c, d) = regex.matchEntire(line)!!.destructured
+        a.toInt()..b.toInt() to c.toInt()..d.toInt()
+    }.toList()
 
 
     override fun calcPart1() = assignmentPair.count { (firstRange, secondRange) ->

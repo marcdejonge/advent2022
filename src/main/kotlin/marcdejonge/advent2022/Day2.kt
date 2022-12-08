@@ -5,7 +5,7 @@ fun main() = DaySolver.printSolutions { Day2() }
 class Day2 : DaySolver(2) {
     private val games = input.map {
         parseChoice(it[0]) to it[2]
-    }
+    }.toList()
 
     override fun calcPart1() =
         games.sumOf { (opponent, me) -> calcScore(parseChoice(me), opponent) }

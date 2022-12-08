@@ -3,48 +3,37 @@ package marcdejonge.advent2022
 fun main() = DaySolver.printSolutions(::Day7)
 
 class Day7 : DaySolver(7) {
-    interface FSItem {
-        val name: String
-        val parent: Directory?
-        val size: Int
-
-        fun addToParent() = parent?.also { it.items[name] = this } ?: error("Missing parent")
+    data class Directory(val parent: Directory?, var totalSize: Int = 0) {
+        fun goUp() = parent?.also { it.totalSize += this.totalSize }
+        fun goToRoot() = generateSequence(this) { it.goUp() }.last()
     }
 
-    data class Directory(
-        override val name: String,
-        override val parent: Directory? = null,
-        val items: MutableMap<String, FSItem> = LinkedHashMap()
-    ) : FSItem {
-        override val size: Int get() = items.values.sumOf { it.size }
-        fun listDirs(): Sequence<Directory> = sequenceOf(this) + items.values.asSequence()
-            .filterIsInstance<Directory>().flatMap { it.listDirs() }
-    }
-
-    data class File(override val name: String, override val parent: Directory, override val size: Int) : FSItem
-
-    private val topDirectory = Directory(name = "/")
+    private val root = Directory(null)
+    private val directorySizes: Sequence<Int>
 
     init {
-        input.fold(topDirectory) { current, line ->
-            val (type, name) = line.split(" ", limit = 2)
-            when (type) {
-                "$" -> if (name == "cd") {
-                    when (val dirName = line.drop(5)) {
-                        "/" -> topDirectory
-                        ".." -> current.parent ?: error("Already at the top directory")
-                        else -> current.items[dirName] as? Directory ?: error("Unknown directory $dirName")
-                    }
-                } else current // Ignore any other commands
-                "dir" -> Directory(line.drop(4), current).addToParent()
-                else -> File(name, current, type.toInt()).addToParent() // The type is actually the size
+        val lineParser = Regex("(\\S+) (\\S+)( (\\S+))?")
+        val allDirectories = mutableListOf(root)
+
+        input.fold(root) { current, line ->
+            val (type, name, _, dirName) = lineParser.matchEntire(line)!!.destructured
+            if (type == "$" && name == "cd") {
+                when (dirName) {
+                    "/" -> current.goToRoot()
+                    ".." -> current.goUp() ?: error("There is no up from the root")
+                    else -> Directory(current).also { allDirectories.add(it) }
+                }
+            } else {
+                current.apply {
+                    val size = type.toIntOrNull()
+                    if (size != null) totalSize += size // We only care about files with actual sizes, rest is ignored
+                }
             }
-        }
+        }.goToRoot()
+
+        directorySizes = allDirectories.asSequence().map { it.totalSize }
     }
 
-    override fun calcPart1() =
-        topDirectory.listDirs().filter { it.size <= 100000 }.sumOf { it.size }
-
-    override fun calcPart2() =
-        topDirectory.listDirs().filter { it.size >= topDirectory.size - 40_000_000 }.minOf { it.size }
+    override fun calcPart1() = directorySizes.filter { it <= 100000 }.sum()
+    override fun calcPart2() = directorySizes.filter { it >= root.totalSize - 40_000_000 }.min()
 }

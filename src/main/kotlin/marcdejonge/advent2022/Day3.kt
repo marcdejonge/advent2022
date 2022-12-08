@@ -3,7 +3,7 @@ package marcdejonge.advent2022
 fun main() = DaySolver.printSolutions { Day3() }
 
 class Day3 : DaySolver(3) {
-    private val rucksacks = input.map(::Rucksack).asSequence()
+    private val rucksacks = input.map(::Rucksack).toList()
 
     override fun calcPart1() = rucksacks.sumOf {
         scoreOf(it.firstCompartment.intersect(it.secondCompartment).single())
