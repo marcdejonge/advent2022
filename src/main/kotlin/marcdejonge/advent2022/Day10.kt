@@ -14,37 +14,29 @@ class Day10 : DaySolver(10) {
         Action(ActionType.valueOf(type.uppercase()), amount.toIntOrNull() ?: 0)
     }.toList()
 
-    private fun List<Action>.execute() = sequence {
+    private fun execute(actions: Iterable<Action>) = sequence {
         var x = 1
-
-        forEach { action ->
+        actions.forEach { action ->
             when (action.type) {
                 ActionType.ADDX -> {
                     yield(x)
                     yield(x)
                     x += action.amount
                 }
-
                 ActionType.NOOP -> yield(x)
             }
         }
     }
 
-    private fun Sequence<Int>.mapToScreen(): String {
-        val screen = StringBuilder(256)
+    private fun Sequence<Int>.mapToScreen() = StringBuilder(256).also { screen ->
         forEachIndexed { time, spriteIx ->
             if (time % 40 == 0) screen.append('\n')
-            if (abs(spriteIx - (time % 40)) <= 1) {
-                screen.append('#')
-            } else {
-                screen.append('.')
-            }
+            screen.append(if (abs(spriteIx - (time % 40)) <= 1) '#' else '.')
         }
-        return screen.toString()
-    }
+    }.toString()
 
-    override fun calcPart1() =
-        actions.execute().mapIndexed { time, x -> if (time % 40 == 19) (time + 1) * x else 0 }.sum()
+    override fun calcPart1() = execute(actions)
+        .mapIndexed { time, x -> if (time % 40 == 19) (time + 1) * x else 0 }.sum()
 
-    override fun calcPart2() = actions.execute().mapToScreen()
+    override fun calcPart2() = execute(actions).mapToScreen()
 }
