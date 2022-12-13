@@ -31,6 +31,7 @@ class DaySolverTests {
             """.trimIndent()),
             Arguments.of(Day11(), 10605L, 2713310158L),
             Arguments.of(Day12(), 31, 29),
+            Arguments.of(Day13(), 13, 140),
         )
     }
 
