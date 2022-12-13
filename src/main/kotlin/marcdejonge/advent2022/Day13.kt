@@ -44,9 +44,7 @@ class Day13 : DaySolver(13) {
         return NumberList(items)
     }
 
-    private fun Parser.parseNumber() = Number(
-        readWhile { it in '0'..'9' }.fold(0) { acc, char -> acc * 10 + (char - '0') }
-    )
+    private fun Parser.parseNumber() = Number(readWhile { it in '0'..'9' }.fold(0) { a, c -> a * 10 + (c - '0') })
 
     private val packets = input.filter { it != "" }.map { Parser(it).parseList() }.toList()
 
@@ -57,7 +55,5 @@ class Day13 : DaySolver(13) {
     private val startPacket = NumberList(NumberList(Number(2)))
     private val endPacket = NumberList(NumberList(Number(6)))
 
-    override fun calcPart2() = (packets + listOf(startPacket, endPacket)).sorted().let { sortedPackets ->
-        (sortedPackets.indexOf(startPacket) + 1) * (sortedPackets.indexOf(endPacket) + 1)
-    }
+    override fun calcPart2() = (packets.count { it < startPacket } + 1) * (packets.count { it < endPacket } + 2)
 }
