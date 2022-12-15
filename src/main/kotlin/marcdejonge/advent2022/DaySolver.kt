@@ -1,5 +1,10 @@
 package marcdejonge.advent2022
 
+import marcdejonge.advent2022.util.GifSequenceWriter
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.stream.FileImageOutputStream
+
 fun main() {
     val day = System.getenv("DAY")?.toIntOrNull() ?: return
 
@@ -10,7 +15,7 @@ fun main() {
     }
 }
 
-abstract class DaySolver(private val day: Int) {
+abstract class DaySolver(private val day: Int, private val supportsAnimation: Boolean = false) {
     private val url by lazy {
         val filePostfix = System.getenv("FILE_POSTFIX") ?: ""
         val fileName = String.format("day%02d%s.txt", day, filePostfix)
@@ -30,6 +35,8 @@ abstract class DaySolver(private val day: Int) {
 
     open fun calcPart2(): Any? = null
 
+    open fun generateAnimation(writer: GifSequenceWriter) = Unit
+
     override fun toString() = "Day $day"
 
     companion object {
@@ -41,6 +48,17 @@ abstract class DaySolver(private val day: Int) {
             printTiming("Calculated") {
                 println("    Part 1: ${solver.solutionPart1 ?: "no solution found"}")
                 println("    Part 2: ${solver.solutionPart2 ?: "no solution found"}")
+            }
+
+            printTiming("Animation generated") {
+                println()
+                println("Generating animation...")
+                if (solver.supportsAnimation && System.getenv("RENDER") != null) {
+                    val file = File(String.format("day%02d.gif", solver.day))
+                    GifSequenceWriter(FileImageOutputStream(file), BufferedImage.TYPE_INT_RGB, 40, false).use { w ->
+                        solver.generateAnimation(w)
+                    }
+                }
             }
         }
 
