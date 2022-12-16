@@ -1,7 +1,7 @@
 package marcdejonge.advent2022.util
 
-import java.lang.Integer.max
-import java.lang.Integer.min
+import java.lang.Long.max
+import java.lang.Long.min
 
 data class LineSegment(val start: Vec2, val end: Vec2) {
     val xRange = min(start.x, end.x)..max(start.x, end.x)

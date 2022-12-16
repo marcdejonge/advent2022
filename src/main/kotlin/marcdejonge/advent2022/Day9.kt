@@ -14,8 +14,8 @@ class Day9 : DaySolver(9) {
     }
 
     private fun Vec2.stepOneTowards(diff: Vec2) = Vec2(
-        if (diff.x == 0) this.x else this.x + (diff.x / abs(diff.x)),
-        if (diff.y == 0) this.y else this.y + (diff.y / abs(diff.y))
+        if (diff.x == 0L) this.x else this.x + (diff.x / abs(diff.x)),
+        if (diff.y == 0L) this.y else this.y + (diff.y / abs(diff.y))
     )
 
     private fun move(snake: List<Vec2>, direction: Direction): List<Vec2> =

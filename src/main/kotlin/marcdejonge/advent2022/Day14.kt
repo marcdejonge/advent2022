@@ -11,7 +11,7 @@ class Day14 : DaySolver(14, true) {
     private val lines = input.flatMap { line ->
         line.splitToSequence(" -> ").map(Vec2::valueOf).lineSegments()
     }.toList()
-    private val maxHeight = lines.maxOf { it.yRange.last } + 2
+    private val maxHeight = (lines.maxOf { it.yRange.last } + 2).toInt()
     private val initialGrid = IntGrid((500 - maxHeight)..(500 + maxHeight), 0..maxHeight)
 
     init {

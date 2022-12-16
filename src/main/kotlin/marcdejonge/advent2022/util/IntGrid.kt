@@ -11,10 +11,14 @@ class IntGrid(
 
     operator fun get(v: Vec2) = get(v.x, v.y)
 
+    operator fun get(x: Long, y: Long) = get(x.toInt(), y.toInt())
+
     operator fun get(x: Int, y: Int) =
         if (x !in xRange || y !in yRange) null else grid[x - xRange.first][y - yRange.first()]
 
     operator fun set(v: Vec2, value: Int) = set(v.x, v.y, value)
+
+    operator fun set(x: Long, y: Long, value: Int) = set(x.toInt(), y.toInt(), value)
 
     operator fun set(x: Int, y: Int, value: Int) {
         if (x !in xRange) error("$x is outside of range $xRange")
@@ -26,7 +30,7 @@ class IntGrid(
         val image = BufferedImage(grid.size, grid[0].size, BufferedImage.TYPE_INT_RGB)
         for (x in 0 until image.width) {
             for (y in 0 until image.height) {
-                image.setRGB(x, y, transform(Vec2(x, y), grid[x][y]))
+                image.setRGB(x, y, transform(Vec2(x.toLong(), y.toLong()), grid[x][y]))
             }
         }
         return image
