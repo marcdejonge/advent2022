@@ -6,15 +6,17 @@ data class AStoreNode<N>(
     val node: N,
     val cameFrom: AStoreNode<N>? = null,
     var score: Long = Long.MAX_VALUE,
-    var heuristicScore: Long = Long.MAX_VALUE,
-)
+    var heuristicScore: Long = score,
+) {
+    fun asSequence() = generateSequence(this, AStoreNode<N>::cameFrom).map(AStoreNode<N>::node).toList().reversed()
+}
 
 inline fun <N> aStar(
     start: N,
     crossinline isGoal: (N) -> Boolean,
     crossinline heuristic: (N) -> Long = { 0L }, // By default we can skip the heuristic, but it's less efficient
     crossinline neighbours: (N) -> Sequence<Pair<N, Long>>,
-): List<N> {
+): AStoreNode<N> {
     val openSet = PriorityQueue<AStoreNode<N>>(compareBy { it.heuristicScore })
     val storedNodes = HashMap<N, AStoreNode<N>>()
     AStoreNode(start, null, 0, heuristic(start)).apply {
@@ -25,7 +27,7 @@ inline fun <N> aStar(
     while (openSet.isNotEmpty()) {
         val current = openSet.remove()
         if (isGoal(current.node)) {
-            return generateSequence(current, AStoreNode<N>::cameFrom).map(AStoreNode<N>::node).toList().reversed()
+            return current
         }
 
         neighbours(current.node).forEach { (neighbor, distance) ->

@@ -33,9 +33,9 @@ class Day12 : DaySolver(12) {
 
     override fun calcPart1() = aStar(startNode, { it == endNode }) { node ->
         neighbours(node) { heightDiff -> heightDiff <= 1 }
-    }.lastIndex
+    }.asSequence().lastIndex
 
     override fun calcPart2() = aStar(endNode, { it.height == 0 }) { node ->
         neighbours(node) { heightDiff -> heightDiff >= -1 }
-    }.lastIndex
+    }.asSequence().lastIndex
 }
