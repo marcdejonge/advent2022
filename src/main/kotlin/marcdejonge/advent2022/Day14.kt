@@ -25,13 +25,13 @@ class Day14 : DaySolver(14, true) {
     }
 
     private fun IntGrid.dropSandFrom(start: Vec2): Vec2? {
-        if (this[start] != EMPTY) return null // Already filled up, can't drop anything anymore!
+        if (this.getOrNull(start) != EMPTY) return null // Already filled up, can't drop anything anymore!
         var (x, y) = start
         while (true) {
             when {
-                this[x, y + 1] == EMPTY -> y++
-                this[x - 1, y + 1] == EMPTY -> y++ + x--
-                this[x + 1, y + 1] == EMPTY -> y++ + x++
+                this.getOrNull(x, y + 1) == EMPTY -> y++
+                this.getOrNull(x - 1, y + 1) == EMPTY -> y++ + x--
+                this.getOrNull(x + 1, y + 1) == EMPTY -> y++ + x++
                 else -> break
             }
         }
