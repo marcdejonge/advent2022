@@ -50,10 +50,10 @@ abstract class DaySolver(private val day: Int, private val supportsAnimation: Bo
                 println("    Part 2: ${solver.solutionPart2 ?: "no solution found"}")
             }
 
-            printTiming("Animation generated") {
-                println()
-                println("Generating animation...")
-                if (solver.supportsAnimation && System.getenv("RENDER") != null) {
+            if (solver.supportsAnimation && System.getenv("RENDER") != null) {
+                printTiming("Animation generated") {
+                    println()
+                    println("Generating animation...")
                     val file = File(String.format("day%02d.gif", solver.day))
                     GifSequenceWriter(FileImageOutputStream(file), BufferedImage.TYPE_INT_RGB, 40, false).use { w ->
                         solver.generateAnimation(w)
