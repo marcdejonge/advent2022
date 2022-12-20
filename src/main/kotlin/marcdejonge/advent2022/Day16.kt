@@ -2,6 +2,7 @@ package marcdejonge.advent2022
 
 import marcdejonge.advent2022.util.breadFirstSearch
 import marcdejonge.advent2022.util.depthFirstSearch
+import marcdejonge.advent2022.util.findBiggestCombination
 
 fun main() = DaySolver.printSolutions(::Day16)
 
@@ -12,10 +13,9 @@ class Day16 : DaySolver(16) {
     }
 
     @JvmInline
-    value class ValveSet(private val value: Long = 0) {
+    value class ValveSet(val value: Long = 0) {
         operator fun contains(valve: Valve) = value and (1L shl valve.ix) != 0L
         operator fun plus(valve: Valve) = ValveSet(value or (1L shl valve.ix))
-        fun overlaps(other: ValveSet) = this.value and other.value != 0L
     }
 
     private val lineFormat = Regex("Valve ([A-Z]+) has flow rate=(\\d+); tunnels? leads? to valves? ([A-Z, ]+)")
@@ -30,6 +30,9 @@ class Day16 : DaySolver(16) {
         val valves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
             valve.copy(ix = ix)
         }.associateBy { it.name }
+
+        if (valves.size > 63) error("More than 63 active valves is not supported right now")
+
         valves.values.forEach { valve ->
             val neighbors = breadFirstSearch(valve, 1, next = {
                 paths[lineNr].asSequence().map { nextValveName -> rawValves.single { it.name == nextValveName } }
@@ -70,7 +73,7 @@ class Day16 : DaySolver(16) {
         } totalFlow = $totalFlow)"
     }
 
-    private fun calculateTotalFlows(startState: State): HashMap<ValveSet, State> {
+    private fun calculateTotalFlows(startState: State): Collection<State> {
         val maxTotalFlows = HashMap<ValveSet, State>()
         depthFirstSearch(startState, State::neighbors) {
             if ((maxTotalFlows[openValves]?.totalFlow ?: 0) < totalFlow) {
@@ -78,29 +81,13 @@ class Day16 : DaySolver(16) {
                 timeLeft > 1
             } else false
         }
-        return maxTotalFlows
+        return maxTotalFlows.values
     }
 
-    override fun calcPart1(): Int = calculateTotalFlows(State(startValve, 30)).values.maxOf { it.totalFlow }
+    override fun calcPart1(): Int = calculateTotalFlows(State(startValve, 30)).maxOf { it.totalFlow }
 
-    override fun calcPart2(): Int {
-        val maxTotalFlows = calculateTotalFlows(State(startValve, 26))
-        val searchArea = maxTotalFlows.toList().sortedByDescending { it.second.totalFlow }
-
-        var maxTotalFlow = 0
-        for (myPathIx in (0 until searchArea.lastIndex).reversed()) {
-            val (myPath, myState) = searchArea[myPathIx]
-            for (elephantPathIx in (myPathIx + 1)..searchArea.lastIndex) {
-                val (elephantPath, elephantState) = searchArea[elephantPathIx]
-                if (!myPath.overlaps(elephantPath)) {
-                    if (myState.totalFlow + elephantState.totalFlow > maxTotalFlow) {
-                        maxTotalFlow = myState.totalFlow + elephantState.totalFlow
-                    }
-                    break
-                }
-            }
-        }
-
-        return maxTotalFlow
-    }
+    override fun calcPart2(): Int = findBiggestCombination(
+        calculateTotalFlows(State(startValve, 26)),
+        bitCount = 8, getMark = { openValves.value }, getScore = { totalFlow }
+    )
 }

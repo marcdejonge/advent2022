@@ -69,3 +69,34 @@ inline fun <T> search(
         }
     }
 }
+
+inline fun <T> findBiggestCombination(
+    input: Iterable<T>,
+    bitCount: Int = 8,
+    crossinline getMark: T.() -> Long,
+    crossinline getScore: T.() -> Int
+): Int {
+    val splitMask = (1L shl bitCount) - 1
+    val searchArea = input.sortedByDescending(getScore)
+    val searchGroups = searchArea.groupBy {
+        getMark(it) and splitMask
+    }
+
+    var max = 0
+    for (myState in searchArea) {
+        for (groupIx in 0..splitMask) {
+            if ((getMark(myState) and groupIx) != 0L) continue // Skip any group that overlaps with me
+
+            for (elephantState in searchGroups[groupIx] ?: emptyList()) {
+                val score = getScore(myState) + getScore(elephantState)
+                if (score < max) break
+                if (getMark(myState) and getMark(elephantState) == 0L) {
+                    max = score
+                    break
+                }
+            }
+        }
+    }
+
+    return max
+}
