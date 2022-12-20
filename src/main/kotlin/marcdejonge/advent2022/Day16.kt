@@ -88,6 +88,6 @@ class Day16 : DaySolver(16) {
 
     override fun calcPart2(): Int = findBiggestCombination(
         calculateTotalFlows(State(startValve, 26)),
-        bitCount = 8, getMark = { openValves.value }, getScore = { totalFlow }
+        getMark = { openValves.value }, getScore = { totalFlow }
     )
 }
