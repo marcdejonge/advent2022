@@ -8,8 +8,8 @@ fun main() = DaySolver.printSolutions(::Day16)
 
 class Day16 : DaySolver(16) {
     data class Valve(val ix: Int, val name: String, val rate: Int, val lineNr: Int = ix) {
-        var neighbors: Map<Valve, Int> = emptyMap()
-        override fun toString() = "Valve $name ($ix), rate=$rate, neighbors = ${neighbors.keys.map { it.name }}"
+        lateinit var neighbors: List<Pair<Valve, Int>>
+        override fun toString() = "Valve $name ($ix), rate=$rate, neighbors = ${neighbors.map { it.first.name }}"
     }
 
     @JvmInline
@@ -18,7 +18,6 @@ class Day16 : DaySolver(16) {
         operator fun plus(valve: Valve) = ValveSet(value or (1L shl valve.ix))
     }
 
-    private val valves: Map<String, Valve>
     private val lineFormat = Regex("Valve ([A-Z]+) has flow rate=(\\d+); tunnels? leads? to valves? ([A-Z, ]+)")
     private val startValve: Valve
     private val totalFlowRate: Int
@@ -28,24 +27,20 @@ class Day16 : DaySolver(16) {
             val (name, rate, canReach) = lineFormat.matchEntire(line)?.destructured ?: error("Invalid line: $line")
             Valve(ix, name, rate.toInt()) to canReach.split(", ")
         }.unzip()
-        valves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
+        val relevantValves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
             valve.copy(ix = ix)
-        }.associateBy { it.name }
+        }.also { if (it.size > 63) error("More than 63 active valves is not supported right now") }
 
-        if (valves.size > 63) error("More than 63 active valves is not supported right now")
-
-        valves.values.forEach { valve ->
-            val neighbors = breadFirstSearch(valve, 1, next = {
+        relevantValves.forEach { valve ->
+            valve.neighbors = breadFirstSearch(valve, 1, next = {
                 paths[lineNr].asSequence().map { nextValveName -> rawValves.single { it.name == nextValveName } }
             }, visit = { it + 1 }) // Visit all valves and count the distance
-                .filterKeys { it.rate > 0 && it.name != valve.name } // Ignore any targets that won't change the flowrate
-                .toSortedMap(compareBy { it.rate }) // pre-sort by rate for the DFS to be more effective
-                .mapKeys { valves[it.key.name]!! }
-            valves[valve.name]?.let { store -> store.neighbors = neighbors }
+                .mapNotNull { (key, cost) -> relevantValves.singleOrNull { it.name == key.name }?.let { it to cost } }
+                .sortedBy { it.first.rate }  // pre-sort by rate for the DFS to be more effective
         }
 
-        startValve = valves.values.single { it.name == "AA" }
-        totalFlowRate = valves.values.sumOf { it.rate }
+        startValve = relevantValves.single { it.name == "AA" }
+        totalFlowRate = relevantValves.sumOf { it.rate }
     }
 
     data class State(
@@ -70,26 +65,30 @@ class Day16 : DaySolver(16) {
         }
 
         override fun toString() = "State(${
-            generateSequence(this, State::prevState).joinToString(" <- ") { it.place.name }
+            generateSequence(this, State::prevState).toList().reversed().joinToString(" -> ") { it.place.name }
         } totalFlow = $totalFlow)"
     }
 
     override fun calcPart1(): Int {
-        var maxScore = 0
-        depthFirstSearch(State(startValve, 30), State::neighbors) {
-            if (totalFlow > maxScore) maxScore = totalFlow
-            timeLeft > 1 && totalFlow + (totalFlowRate - openFlowRate) * (timeLeft - 2) > maxScore
+        var maxState = State(startValve, 30)
+        depthFirstSearch(maxState, State::neighbors) {
+            if (totalFlow > maxState.totalFlow) maxState = this
+            timeLeft > 1 && totalFlow + (totalFlowRate - openFlowRate) * (timeLeft - 2) > maxState.totalFlow
         }
-        return maxScore
+        return maxState.totalFlow
     }
 
     override fun calcPart2(): Int {
         val maxTotalFlows = HashMap<ValveSet, State>()
-        depthFirstSearch(State(startValve, 26), State::neighbors) {
+        var maxState = State(startValve, 26)
+        depthFirstSearch(maxState, State::neighbors) {
+            if (totalFlow > maxState.totalFlow) maxState = this
             if (totalFlow >= (maxTotalFlows[openValves]?.totalFlow ?: 0)) {
                 maxTotalFlows[openValves] = this
                 timeLeft > 1
-            } else false
+            } else {
+                timeLeft > 1 && totalFlow + (totalFlowRate - openFlowRate) * (timeLeft - 2) > maxState.totalFlow
+            }
         }
 
         return findMaxNonOverlappingCombinations(

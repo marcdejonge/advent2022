@@ -3,6 +3,7 @@ package marcdejonge.advent2022
 import marcdejonge.advent2022.util.GifSequenceWriter
 import java.awt.image.BufferedImage
 import java.io.File
+import java.net.URL
 import javax.imageio.stream.FileImageOutputStream
 
 fun main() {
@@ -16,10 +17,13 @@ fun main() {
 }
 
 abstract class DaySolver(private val day: Int, private val supportsAnimation: Boolean = false) {
-    private val url by lazy {
+    private val fileName: String
+    private val url: URL
+
+    init {
         val filePostfix = System.getenv("FILE_POSTFIX") ?: ""
-        val fileName = String.format("day%02d%s.txt", day, filePostfix)
-        this::class.java.classLoader.getResource(fileName) ?: error("Could not load file $fileName")
+        fileName = String.format("day%02d%s.txt", day, filePostfix)
+        url = this::class.java.classLoader.getResource(fileName) ?: error("Could not load file $fileName")
     }
 
     val inputFullText: String
@@ -37,26 +41,28 @@ abstract class DaySolver(private val day: Int, private val supportsAnimation: Bo
 
     open fun generateAnimation(writer: GifSequenceWriter) = Unit
 
-    override fun toString() = "Day $day"
+    override fun toString() = "Day $day from $fileName"
 
     companion object {
         fun printSolutions(solverFactory: () -> DaySolver) {
-            val solver = printTiming("Loaded") {
-                solverFactory()
-            }
-            println("$solver:")
-            printTiming("Calculated") {
-                println("    Part 1: ${solver.solutionPart1 ?: "no solution found"}")
-                println("    Part 2: ${solver.solutionPart2 ?: "no solution found"}")
-            }
+            printTiming("Full run") {
+                val solver = solverFactory()
+                println("$solver:")
+                printTiming("") {
+                    print("    Part 1: ${solver.solutionPart1 ?: "no solution found"}")
+                }
+                printTiming("") {
+                    print("    Part 2: ${solver.solutionPart2 ?: "no solution found"}")
+                }
 
-            if (solver.supportsAnimation && System.getenv("RENDER") != null) {
-                printTiming("Animation generated") {
-                    println()
-                    println("Generating animation...")
-                    val file = File(String.format("day%02d.gif", solver.day))
-                    GifSequenceWriter(FileImageOutputStream(file), BufferedImage.TYPE_INT_RGB, 40, false).use { w ->
-                        solver.generateAnimation(w)
+                if (solver.supportsAnimation && System.getenv("RENDER") != null) {
+                    printTiming("Animation generated") {
+                        println()
+                        println("Generating animation...")
+                        val file = File(String.format("day%02d.gif", solver.day))
+                        GifSequenceWriter(FileImageOutputStream(file), BufferedImage.TYPE_INT_RGB, 40, false).use { w ->
+                            solver.generateAnimation(w)
+                        }
                     }
                 }
             }
