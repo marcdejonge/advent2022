@@ -2,84 +2,105 @@ package marcdejonge.advent2022
 
 import marcdejonge.advent2022.util.breadFirstSearch
 import marcdejonge.advent2022.util.depthFirstSearch
-import kotlin.math.max
 
 fun main() = DaySolver.printSolutions(::Day16)
 
 class Day16 : DaySolver(16) {
-    data class Valve(val ix: Int, val name: String, val rate: Int, val canReach: List<String>)
+    data class Valve(val ix: Int, val name: String, val rate: Int, val lineNr: Int = ix) {
+        var neighbors: Map<Valve, Int> = emptyMap()
+        override fun toString() = "Valve $name ($ix), rate=$rate, neighbors = ${neighbors.keys.map { it.name }}"
+    }
 
     @JvmInline
     value class ValveSet(private val value: Long = 0) {
         operator fun contains(valve: Valve) = value and (1L shl valve.ix) != 0L
         operator fun plus(valve: Valve) = ValveSet(value or (1L shl valve.ix))
+        fun overlaps(other: ValveSet) = this.value and other.value != 0L
     }
 
     private val lineFormat = Regex("Valve ([A-Z]+) has flow rate=(\\d+); tunnels? leads? to valves? ([A-Z, ]+)")
-    private val valves: List<Valve> = input.mapIndexed { ix, line ->
-        val (name, rate, canReach) = lineFormat.matchEntire(line)?.destructured ?: error("Invalid line: $line")
-        Valve(ix, name, rate.toInt(), canReach.split(", "))
-    }.toList()
-    private val startValve = valves.single { it.name == "AA" }
-    private val paths = valves.associateWith { startValve ->
-        breadFirstSearch(startValve, 1, next = {
-            canReach.asSequence().map { nextValveName -> valves.single { it.name == nextValveName } }
-        }, visit = { it + 1 }) // Visit all valves and count the distance
-            .filterKeys { it.rate > 0 } // Ignore any targets that won't change the flowrate
-            .toSortedMap(compareBy { it.rate }) // pre-sort by rate for the DFS to be more effective
-    }
+    private val startValve: Valve
+    private val totalFlowRate: Int
 
-    data class PersonalState(val place: Valve, val timeLeft: Int) {
-        fun stepTo(valve: Valve, timeNeeded: Int) = PersonalState(valve, timeLeft - timeNeeded)
-        override fun toString() = "${place.name} @ $timeLeft"
+    init {
+        val (rawValves, paths) = input.mapIndexed { ix, line ->
+            val (name, rate, canReach) = lineFormat.matchEntire(line)?.destructured ?: error("Invalid line: $line")
+            Valve(ix, name, rate.toInt()) to canReach.split(", ")
+        }.unzip()
+        val valves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
+            valve.copy(ix = ix)
+        }.associateBy { it.name }
+        valves.values.forEach { valve ->
+            val neighbors = breadFirstSearch(valve, 1, next = {
+                paths[lineNr].asSequence().map { nextValveName -> rawValves.single { it.name == nextValveName } }
+            }, visit = { it + 1 }) // Visit all valves and count the distance
+                .filterKeys { it.rate > 0 && it.name != valve.name } // Ignore any targets that won't change the flowrate
+                .toSortedMap(compareBy { it.rate }) // pre-sort by rate for the DFS to be more effective
+                .mapKeys { valves[it.key.name]!! }
+            valves[valve.name]?.let { store -> store.neighbors = neighbors }
+        }
+
+        startValve = valves.values.single { it.name == "AA" }
+        totalFlowRate = valves.values.sumOf { it.rate }
     }
 
     data class State(
-        val me: PersonalState,
-        val elephant: PersonalState,
+        val place: Valve,
+        val timeLeft: Int,
         val openFlowRate: Int = 0,
         val openValves: ValveSet = ValveSet(),
         val totalFlow: Int = 0,
+        val prevState: State? = null,
     ) {
-        fun maxTotalFlow(totalRate: Int) = totalFlow +
-                (totalRate - openFlowRate) * (max(me.timeLeft, elephant.timeLeft) - 2)
-
-        fun iStepTo(valve: Valve, timeNeeded: Int): State = me.stepTo(valve, timeNeeded).let { next ->
-            State(next, elephant, openFlowRate + valve.rate, openValves + valve, totalFlow + next.timeLeft * valve.rate)
+        fun neighbors() = place.neighbors.asSequence().mapNotNull { (nextValve, cost) ->
+            val newTimeLeft = timeLeft - cost
+            if (newTimeLeft <= 0 || nextValve in openValves) null
+            else State(
+                nextValve,
+                newTimeLeft,
+                openFlowRate + nextValve.rate,
+                openValves + nextValve,
+                totalFlow + newTimeLeft * nextValve.rate,
+                this
+            )
         }
 
-        fun elephantStepTo(valve: Valve, timeNeeded: Int): State = elephant.stepTo(valve, timeNeeded).let { next ->
-            State(me, next, openFlowRate + valve.rate, openValves + valve, totalFlow + next.timeLeft * valve.rate)
+        override fun toString() = "State(${
+            generateSequence(this, State::prevState).joinToString(" <- ") { it.place.name }
+        } totalFlow = $totalFlow)"
+    }
+
+    private fun calculateTotalFlows(startState: State): HashMap<ValveSet, State> {
+        val maxTotalFlows = HashMap<ValveSet, State>()
+        depthFirstSearch(startState, State::neighbors) {
+            if ((maxTotalFlows[openValves]?.totalFlow ?: 0) < totalFlow) {
+                maxTotalFlows[openValves] = this
+                timeLeft > 1
+            } else false
         }
+        return maxTotalFlows
     }
 
-    private val totalFlowRate = valves.sumOf { it.rate }
-    private fun State.neighbors() =
-        if (me.timeLeft >= elephant.timeLeft)
-            paths[me.place]!!.asSequence().map { (nextValve, cost) -> iStepTo(nextValve, cost) }
-                .filter { me.timeLeft > 0 && it.me.place !in openValves }
-        else
-            paths[elephant.place]!!.asSequence().map { (nextValve, cost) -> elephantStepTo(nextValve, cost) }
-                .filter { elephant.timeLeft > 0 && it.elephant.place !in openValves }
+    override fun calcPart1(): Int = calculateTotalFlows(State(startValve, 30)).values.maxOf { it.totalFlow }
 
-    private inline fun calculate(startState: State, crossinline check: State.() -> Boolean): Int {
-        var maxState = startState
-        depthFirstSearch(startState, nextSequence = { neighbors() }, visitNext = {
-            if (maxState.totalFlow < totalFlow) maxState = this
-            check() && maxTotalFlow(totalFlowRate) > maxState.totalFlow
-        })
-        return maxState.totalFlow
-    }
+    override fun calcPart2(): Int {
+        val maxTotalFlows = calculateTotalFlows(State(startValve, 26))
+        val searchArea = maxTotalFlows.toList().sortedByDescending { it.second.totalFlow }
 
-    override fun calcPart1() = calculate(
-        State(PersonalState(startValve, 30), PersonalState(startValve, 0))
-    ) {
-        me.timeLeft > 1
-    }
+        var maxTotalFlow = 0
+        for (myPathIx in (0 until searchArea.lastIndex).reversed()) {
+            val (myPath, myState) = searchArea[myPathIx]
+            for (elephantPathIx in (myPathIx + 1)..searchArea.lastIndex) {
+                val (elephantPath, elephantState) = searchArea[elephantPathIx]
+                if (!myPath.overlaps(elephantPath)) {
+                    if (myState.totalFlow + elephantState.totalFlow > maxTotalFlow) {
+                        maxTotalFlow = myState.totalFlow + elephantState.totalFlow
+                    }
+                    break
+                }
+            }
+        }
 
-    override fun calcPart2() = calculate(
-        State(PersonalState(startValve, 26), PersonalState(startValve, 26))
-    ) {
-        me.timeLeft > 1 && elephant.timeLeft > 1
+        return maxTotalFlow
     }
 }
