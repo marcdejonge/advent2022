@@ -27,20 +27,21 @@ class Day16 : DaySolver(16) {
             val (name, rate, canReach) = lineFormat.matchEntire(line)?.destructured ?: error("Invalid line: $line")
             Valve(ix, name, rate.toInt()) to canReach.split(", ")
         }.unzip()
+
         val relevantValves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
             valve.copy(ix = ix)
         }.also { if (it.size > 63) error("More than 63 active valves is not supported right now") }
+        startValve = relevantValves.single { it.name == "AA" }
+        totalFlowRate = relevantValves.sumOf { it.rate }
 
         relevantValves.forEach { valve ->
             valve.neighbors = breadFirstSearch(valve, 1, next = {
                 paths[lineNr].asSequence().map { nextValveName -> rawValves.single { it.name == nextValveName } }
             }, visit = { it + 1 }) // Visit all valves and count the distance
                 .mapNotNull { (key, cost) -> relevantValves.singleOrNull { it.name == key.name }?.let { it to cost } }
+                .filter { (target, _) -> target != startValve || startValve.rate > 0 }
                 .sortedBy { it.first.rate }  // pre-sort by rate for the DFS to be more effective
         }
-
-        startValve = relevantValves.single { it.name == "AA" }
-        totalFlowRate = relevantValves.sumOf { it.rate }
     }
 
     data class State(
