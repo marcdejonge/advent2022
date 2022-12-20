@@ -70,29 +70,31 @@ inline fun <T> search(
     }
 }
 
-inline fun <T> findBiggestCombination(
+inline fun <T> findMaxNonOverlappingCombinations(
     input: Iterable<T>,
     bitCount: Int = 8,
-    crossinline getMark: T.() -> Long,
+    crossinline getBitMask: T.() -> Long,
     crossinline getScore: T.() -> Int
-): Int {
-    val splitMask = (1L shl bitCount) - 1
-    val searchGroups = input.sortedByDescending(getScore).groupBy {
-        getMark(it) and splitMask
-    }
+): Pair<T, T> {
+    val splitMask = (1 shl bitCount) - 1
+    val buckets = Array<ArrayList<T>>(splitMask + 1) { ArrayList() }
+    input.sortedByDescending(getScore).forEach { buckets[getBitMask(it).toInt() and splitMask].add(it) }
 
     var max = 0
-    for ((thisGroupIx, thisGroup) in searchGroups) {
-        for (thisItem in thisGroup) {
-            for (otherGroupIx in (thisGroupIx + 1)..splitMask) {
-                if ((getMark(thisItem) and otherGroupIx) != 0L) continue // Skip any group that overlaps with me
-                val otherGroup = searchGroups[otherGroupIx] ?: continue // Skip any group that doesn't exist
+    var maxFirstItem: T? = null
+    var maxSecondItem: T? = null
+    for (firstIx in buckets.indices) {
+        for (firstItem in buckets[firstIx]) {
+            for (secondIx in (firstIx + 1)..splitMask) {
+                if ((getBitMask(firstItem).toInt() and secondIx) != 0) continue // Skip any group that overlaps with me
 
-                for (otherItem in otherGroup) {
-                    val score = getScore(thisItem) + getScore(otherItem)
+                for (secondItem in buckets[secondIx]) {
+                    val score = getScore(firstItem) + getScore(secondItem)
                     if (score < max) break
-                    if (getMark(thisItem) and getMark(otherItem) == 0L) {
+                    if (getBitMask(firstItem) and getBitMask(secondItem) == 0L) {
                         max = score
+                        maxFirstItem = firstItem
+                        maxSecondItem = secondItem
                         break
                     }
                 }
@@ -100,5 +102,6 @@ inline fun <T> findBiggestCombination(
         }
     }
 
-    return max
+    if (maxFirstItem == null || maxSecondItem == null) error("Could not find any pair")
+    return maxFirstItem to maxSecondItem
 }

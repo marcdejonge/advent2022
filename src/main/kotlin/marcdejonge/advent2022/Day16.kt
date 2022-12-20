@@ -2,7 +2,7 @@ package marcdejonge.advent2022
 
 import marcdejonge.advent2022.util.breadFirstSearch
 import marcdejonge.advent2022.util.depthFirstSearch
-import marcdejonge.advent2022.util.findBiggestCombination
+import marcdejonge.advent2022.util.findMaxNonOverlappingCombinations
 
 fun main() = DaySolver.printSolutions(::Day16)
 
@@ -18,6 +18,7 @@ class Day16 : DaySolver(16) {
         operator fun plus(valve: Valve) = ValveSet(value or (1L shl valve.ix))
     }
 
+    private val valves: Map<String, Valve>
     private val lineFormat = Regex("Valve ([A-Z]+) has flow rate=(\\d+); tunnels? leads? to valves? ([A-Z, ]+)")
     private val startValve: Valve
     private val totalFlowRate: Int
@@ -27,7 +28,7 @@ class Day16 : DaySolver(16) {
             val (name, rate, canReach) = lineFormat.matchEntire(line)?.destructured ?: error("Invalid line: $line")
             Valve(ix, name, rate.toInt()) to canReach.split(", ")
         }.unzip()
-        val valves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
+        valves = rawValves.filter { it.rate > 0 || it.name == "AA" }.mapIndexed { ix, valve ->
             valve.copy(ix = ix)
         }.associateBy { it.name }
 
@@ -59,12 +60,12 @@ class Day16 : DaySolver(16) {
             val newTimeLeft = timeLeft - cost
             if (newTimeLeft <= 0 || nextValve in openValves) null
             else State(
-                nextValve,
-                newTimeLeft,
-                openFlowRate + nextValve.rate,
-                openValves + nextValve,
-                totalFlow + newTimeLeft * nextValve.rate,
-                this
+                place = nextValve,
+                timeLeft = newTimeLeft,
+                openFlowRate = openFlowRate + nextValve.rate,
+                openValves = openValves + nextValve,
+                totalFlow = totalFlow + newTimeLeft * nextValve.rate,
+                prevState = this
             )
         }
 
@@ -73,21 +74,27 @@ class Day16 : DaySolver(16) {
         } totalFlow = $totalFlow)"
     }
 
-    private fun calculateTotalFlows(startState: State): Collection<State> {
+    override fun calcPart1(): Int {
+        var maxScore = 0
+        depthFirstSearch(State(startValve, 30), State::neighbors) {
+            if (totalFlow > maxScore) maxScore = totalFlow
+            timeLeft > 1 && totalFlow + (totalFlowRate - openFlowRate) * (timeLeft - 2) > maxScore
+        }
+        return maxScore
+    }
+
+    override fun calcPart2(): Int {
         val maxTotalFlows = HashMap<ValveSet, State>()
-        depthFirstSearch(startState, State::neighbors) {
-            if ((maxTotalFlows[openValves]?.totalFlow ?: 0) < totalFlow) {
+        depthFirstSearch(State(startValve, 26), State::neighbors) {
+            if (totalFlow >= (maxTotalFlows[openValves]?.totalFlow ?: 0)) {
                 maxTotalFlows[openValves] = this
                 timeLeft > 1
             } else false
         }
-        return maxTotalFlows.values
+
+        return findMaxNonOverlappingCombinations(
+            maxTotalFlows.values,
+            getBitMask = { openValves.value }, getScore = { totalFlow }
+        ).let { (first, second) -> first.totalFlow + second.totalFlow }
     }
-
-    override fun calcPart1(): Int = calculateTotalFlows(State(startValve, 30)).maxOf { it.totalFlow }
-
-    override fun calcPart2(): Int = findBiggestCombination(
-        calculateTotalFlows(State(startValve, 26)),
-        getMark = { openValves.value }, getScore = { totalFlow }
-    )
 }
