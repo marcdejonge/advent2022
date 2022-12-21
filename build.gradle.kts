@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.8.0-RC2"
 }
 
 repositories {
@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
     // Implementation dependencies
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.7.21"))
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0-RC2"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Testing libraries
