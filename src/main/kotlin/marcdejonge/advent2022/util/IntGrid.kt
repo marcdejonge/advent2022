@@ -38,7 +38,7 @@ class IntGrid(
         val image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
         for (x in 0 until width) {
             for (y in 0 until height) {
-                image.setRGB(x, y, transform(Vec2(x.toLong(), y.toLong()), grid[x + y * width]))
+                image.setRGB(x, y, transform(Vec2(x, y), grid[x + y * width]))
             }
         }
         return image
