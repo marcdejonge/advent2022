@@ -4,21 +4,21 @@ inline fun <T, R> depthFirstSearch(
     start: T,
     initial: R,
     crossinline next: T.() -> Sequence<T>,
-    crossinline visit: T.(R) -> R
+    crossinline visit: T.(R) -> R = { it }
 ): Map<T, R> = search(start, initial, next, visit, ArrayDeque<T>::removeLast)
 
 inline fun <T, R> breadFirstSearch(
     start: T,
     initial: R,
     crossinline next: T.() -> Sequence<T>,
-    crossinline visit: T.(R) -> R
+    crossinline visit: T.(R) -> R = { it }
 ): Map<T, R> = search(start, initial, next, visit, ArrayDeque<T>::removeFirst)
 
 inline fun <T, R> search(
     start: T,
     initial: R,
     crossinline next: T.() -> Sequence<T>,
-    crossinline visit: T.(R) -> R,
+    crossinline visit: T.(R) -> R = { it },
     crossinline nextFromQueue: ArrayDeque<T>.() -> T
 ): Map<T, R> {
     val queue = ArrayDeque<T>()
@@ -28,7 +28,7 @@ inline fun <T, R> search(
 
     while (queue.isNotEmpty()) {
         val current = nextFromQueue(queue)
-        next(current).forEach { nextNode ->
+        for (nextNode in next(current)) {
             if (!visited.contains(nextNode)) {
                 visited[nextNode] = visit(nextNode, visited[current]!!)
                 queue.add(nextNode)
