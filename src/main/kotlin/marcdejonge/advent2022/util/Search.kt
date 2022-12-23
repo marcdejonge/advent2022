@@ -42,19 +42,19 @@ inline fun <T, R> search(
 inline fun <T> depthFirstSearch(
     start: T,
     crossinline nextSequence: T.() -> Sequence<T>,
-    crossinline visitNext: T.() -> Boolean,
+    crossinline visitNext: T.() -> Boolean = { true },
 ) = search(start, nextSequence, visitNext, ArrayDeque<T>::removeLast)
 
 inline fun <T> breadFirstSearch(
     start: T,
     crossinline nextSequence: T.() -> Sequence<T>,
-    crossinline visitNext: T.() -> Boolean,
+    crossinline visitNext: T.() -> Boolean = { true },
 ) = search(start, nextSequence, visitNext, ArrayDeque<T>::removeFirst)
 
 inline fun <T> search(
     start: T,
     crossinline nextSequence: T.() -> Sequence<T>,
-    crossinline visitNext: T.() -> Boolean,
+    crossinline visitNext: T.() -> Boolean = { true },
     crossinline nextFromQueue: ArrayDeque<T>.() -> T
 ) {
     val queue = ArrayDeque<T>()
