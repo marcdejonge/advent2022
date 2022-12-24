@@ -9,6 +9,7 @@ data class AStoreNode<N>(
     var heuristicScore: Long = score,
 ) {
     fun asSequence() = generateSequence(this, AStoreNode<N>::cameFrom).map(AStoreNode<N>::node).toList().reversed()
+    override fun toString() = "AStarNode $node ($score / $heuristicScore)"
 }
 
 inline fun <N> aStar(

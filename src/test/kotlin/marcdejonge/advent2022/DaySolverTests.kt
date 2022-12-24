@@ -39,6 +39,7 @@ class DaySolverTests {
             Arguments.of(Day18(), 64, 58),
             //Arguments.of(Day19(), 33, 3472), // This is disabled by default, because it takes very long
             Arguments.of(Day20(), 3L, 1623178306L),
+            Arguments.of(Day21(), 152L, 301L),
         )
     }
 
